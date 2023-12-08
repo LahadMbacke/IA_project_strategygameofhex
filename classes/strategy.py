@@ -66,38 +66,43 @@ class Random(PlayerStrat):
             return None
 
 
+
 class MiniMax(PlayerStrat):
-    def __init__(self, _board_state, player, max_depth=3):
+    def __init__(self, _board_state, player, max_depth=5):
         super().__init__(_board_state, player)
         self.max_depth = max_depth
 
     def start(self):
-        best_move, best_value = self.minimax(self.root_state, self.max_depth, True)
+        best_move, best_value = self.minmax(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
         print(f"Je suis le Joueur {self.player}, mon placement {best_move}, valeur {best_value}")
         return best_move
 
-    def minimax(self, board, depth, max_player):
-        if depth == 0 or logic.is_game_over(self.player, board):
-            return None, self.evaluate(board)
+    def minmax(self, board, depth, alpha, beta, max_player):
+        if depth == 0 or logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
+            evaluation = self.evaluate(board)
+            return None, evaluation if evaluation is not None else (-float('inf') if max_player else float('inf'))
 
         if max_player:
-            best_value = -float('inf')
+            best_value = -math.inf
             best_move = None
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = self.player
-                _, value = self.minimax(new_board, depth - 1, False)
+                _, value = self.minmax(new_board, depth - 1, alpha, beta, False)
+                new_board[move[0], move[1]] = 0 
                 if value > best_value:
                     best_value = value
                     best_move = move
-            return best_move, best_value
+            return best_move, best_value  
+
         else:
-            best_value = float('inf')
+            best_value = math.inf
             best_move = None
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = 3 - self.player
-                _, value = self.minimax(new_board, depth - 1, True)
+                _, value = self.minmax(new_board, depth - 1, alpha, beta, True)
+                new_board[move[0], move[1]] = 0  
                 if value < best_value:
                     best_value = value
                     best_move = move
@@ -109,75 +114,61 @@ class MiniMax(PlayerStrat):
         elif logic.is_game_over(3 - self.player, board):
             return -1
         else:
-            return 0
-
+            player_pieces = np.count_nonzero(board == self.player)
+            opponent_pieces = np.count_nonzero(board == 3 - self.player)
+            return player_pieces - opponent_pieces
+        
 class MiniMaxAlphaBeta(PlayerStrat):
-    def __init__(self, _board_state, player, max_depth=1000):
+    def __init__(self, _board_state, player, max_depth=100):
         super().__init__(_board_state, player)
         self.max_depth = max_depth
 
     def start(self):
-        best_move, best_value = self.minimax(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
+        best_move, best_value = self.alphabeta(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
         print(f"Je suis le Joueur {self.player}, mon placement {best_move}, valeur {best_value}")
         return best_move
 
-    def minimax(self, board, depth, alpha, beta, max_player):
-        if depth == 0 or logic.is_game_over(self.player, board):
-            return None, self.evaluate(board)
-        
+    def alphabeta(self, board, depth, alpha, beta, max_player):
+        if depth == 0 or logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
+            return None, self.evaluate(board) 
+        # if self.evaluate(board) is not None else (-float('inf') if max_player else float('inf'))
+
         if max_player:
-            best_value = -float('inf')
+            best_value = -math.inf
             best_move = None
-            
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = self.player
-                _, value = self.minimax(new_board, depth - 1, alpha, beta, False)
-                print(f" cout = {depth} best_value =  {best_value},  valeur =  {value}")
+                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, False)
+                new_board[move[0], move[1]] = 0 
                 if value > best_value:
                     best_value = value
                     best_move = move
-                
-                alpha = max(alpha, best_value)
+                alpha = max(alpha, value)
                 if beta <= alpha:
                     break
             return best_move, best_value
         else:
-            best_value = float('inf')
+            best_value = math.inf
             best_move = None
-            print(f" TAILLE = {len(logic.get_possible_moves(board))}")
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = 3 - self.player
-                _, value = self.minimax(new_board, depth - 1, alpha, beta, True)
-                print(f" cout = {depth} best_value =  {best_value},  valeur =  {value}")
+                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, True)
+                new_board[move[0], move[1]] = 0  
                 if value < best_value:
                     best_value = value
                     best_move = move
-                beta = min(beta, best_value)
+                beta = min(beta, value)
                 if beta <= alpha:
                     break
             return best_move, best_value
 
-    # def evaluate(self, board):
-    #     if logic.is_game_over(self.player, board):
-    #         return 1
-    #     elif logic.is_game_over(3 - self.player, board):
-    #         return -1
-    #     else:
-    #         print("Erreur")
-    #         print(board)
     def evaluate(self, board):
-        game_over_for_current_player = logic.is_game_over(self.player, board)
-        if game_over_for_current_player:
-            return 1
-        else:
-            game_over_for_opponent = logic.is_game_over(3 - self.player, board)
-            if game_over_for_opponent:
+            if logic.is_game_over(self.player, board):
+                return 1
+            elif logic.is_game_over(3 - self.player, board):
                 return -1
-            else:
-                print("Erreur")
-                print(board)
         
 
 class MyStrategyPlayer(PlayerStrat):

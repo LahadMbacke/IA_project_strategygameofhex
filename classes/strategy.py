@@ -74,7 +74,7 @@ class MiniMax(PlayerStrat):
 
     def start(self):
         best_move, best_value = self.minmax(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
-        print(f"Je suis le Joueur {self.player}, mon placement {best_move}, valeur {best_value}")
+        print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
         return best_move
 
     def minmax(self, board, depth, alpha, beta, max_player):
@@ -125,7 +125,7 @@ class MiniMaxAlphaBeta(PlayerStrat):
 
     def start(self):
         best_move, best_value = self.alphabeta(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
-        print(f"Je suis le Joueur {self.player}, mon placement {best_move}, valeur {best_value}")
+        print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
         return best_move
 
     def alphabeta(self, board, depth, alpha, beta, max_player):
@@ -169,6 +169,9 @@ class MiniMaxAlphaBeta(PlayerStrat):
                 return 1
             elif logic.is_game_over(3 - self.player, board):
                 return -1
+    def count_pieces(self, board):
+        return sum(1 for x in range(len(board)) for y in range(len(board[x])) if board[x][y] == self.player)
+    
         
 
 class MyStrategyPlayer(PlayerStrat):

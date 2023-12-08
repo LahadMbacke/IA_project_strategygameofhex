@@ -14,7 +14,6 @@ import classes.logic as logic
 # When implementing a new strategy add it to the `str2strat`
 # dictionary at the end of the file
 
-
 class PlayerStrat:
     def __init__(self, _board_state, player):
         self.root_state = _board_state
@@ -112,10 +111,8 @@ class MiniMax(PlayerStrat):
         else:
             return 0
 
-
-
 class MiniMaxAlphaBeta(PlayerStrat):
-    def __init__(self, _board_state, player, max_depth=3):
+    def __init__(self, _board_state, player, max_depth=1000):
         super().__init__(_board_state, player)
         self.max_depth = max_depth
 
@@ -127,16 +124,20 @@ class MiniMaxAlphaBeta(PlayerStrat):
     def minimax(self, board, depth, alpha, beta, max_player):
         if depth == 0 or logic.is_game_over(self.player, board):
             return None, self.evaluate(board)
+        
         if max_player:
             best_value = -float('inf')
             best_move = None
+            
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = self.player
                 _, value = self.minimax(new_board, depth - 1, alpha, beta, False)
+                print(f" cout = {depth} best_value =  {best_value},  valeur =  {value}")
                 if value > best_value:
                     best_value = value
                     best_move = move
+                
                 alpha = max(alpha, best_value)
                 if beta <= alpha:
                     break
@@ -144,10 +145,12 @@ class MiniMaxAlphaBeta(PlayerStrat):
         else:
             best_value = float('inf')
             best_move = None
+            print(f" TAILLE = {len(logic.get_possible_moves(board))}")
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = 3 - self.player
                 _, value = self.minimax(new_board, depth - 1, alpha, beta, True)
+                print(f" cout = {depth} best_value =  {best_value},  valeur =  {value}")
                 if value < best_value:
                     best_value = value
                     best_move = move
@@ -156,17 +159,26 @@ class MiniMaxAlphaBeta(PlayerStrat):
                     break
             return best_move, best_value
 
+    # def evaluate(self, board):
+    #     if logic.is_game_over(self.player, board):
+    #         return 1
+    #     elif logic.is_game_over(3 - self.player, board):
+    #         return -1
+    #     else:
+    #         print("Erreur")
+    #         print(board)
     def evaluate(self, board):
-        if logic.is_game_over(self.player, board):
+        game_over_for_current_player = logic.is_game_over(self.player, board)
+        if game_over_for_current_player:
             return 1
-        elif logic.is_game_over(3 - self.player, board):
-            return -1
         else:
-            return 0
-    
-
-
-
+            game_over_for_opponent = logic.is_game_over(3 - self.player, board)
+            if game_over_for_opponent:
+                return -1
+            else:
+                print("Erreur")
+                print(board)
+        
 
 class MyStrategyPlayer(PlayerStrat):
     def __init__(self, _board_state, player):

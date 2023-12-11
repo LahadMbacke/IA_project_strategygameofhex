@@ -64,6 +64,8 @@ class Tournament:
         """
         Runs a number of games between the same two opponents.
         """
+        tournament_results = pd.DataFrame()  
+
         scores = [0, 0]
 
         for _ in range(self.N_GAMES):
@@ -82,4 +84,23 @@ class Tournament:
         # TODO Design your own evaluation measure!
         # https://pyformat.info/
         log.info("Design your own evaluation measure!")
-        print(scores)
+        # print(scores)
+
+         # Calcul des pourcentages de victoire
+        total_games = sum(scores)
+        win_percentages = [score / total_games for score in scores]
+
+       
+        # Affichage des statistiques sous forme de tableau avec Pandas
+        names = ['Joueur1', 'Joueur2']
+        size = self.BOARD_SIZE 
+        data = {
+            'Joueur1': [names[0]],
+            'Joueur2': [names[1]],
+            'size': [size],
+            '%win_Joueur1': [win_percentages[0]],
+            '%win_Joueur2': [win_percentages[1]]
+        }
+        tournament_results = pd.concat([tournament_results, pd.DataFrame(data)])
+
+        print(tournament_results.to_csv(sep=',', index=False))

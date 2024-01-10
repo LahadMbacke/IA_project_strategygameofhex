@@ -8,7 +8,7 @@ from rich.table import Table
 from rich.progress import track
 from rich.console import Console
 from rich.progress import Progress
-
+import pandas as pd
 import classes.logic as logic
 
 # When implementing a new strategy add it to the `str2strat`
@@ -74,15 +74,13 @@ class MiniMax(PlayerStrat):
         self.max_depth = max_depth
 
     def start(self):
-        best_move = self.minmax(self.root_state, True)
+        best_move = self.minimax(self.root_state, True)
         print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
         return best_move
 
-    def minmax(self, board,max_player):
+    def minimax(self, board, max_player):
         if logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
-            evaluation = self.evaluate(board)
-            return None, evaluation 
-        # if evaluation is not None else (-float('inf') if max_player else float('inf'))
+            return None, self.evaluate(board)
 
         if max_player:
             best_value = -math.inf
@@ -90,20 +88,19 @@ class MiniMax(PlayerStrat):
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = self.player
-                _, value = self.minmax(new_board,False)
+                _, value = self.minimax(new_board, False)
                 new_board[move[0], move[1]] = 0 
                 if value > best_value:
                     best_value = value
                     best_move = move
-            return best_move  
-
+            return best_move
         else:
             best_value = math.inf
             best_move = None
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = 3 - self.player
-                _, value = self.minmax(new_board, True)
+                _, value = self.minimax(new_board, True)
                 new_board[move[0], move[1]] = 0  
                 if value < best_value:
                     best_value = value
@@ -115,23 +112,22 @@ class MiniMax(PlayerStrat):
             return 1
         elif logic.is_game_over(3 - self.player, board):
             return -1
-        # else:
-        #     player_pieces = np.count_nonzero(board == self.player)
-        #     opponent_pieces = np.count_nonzero(board == 3 - self.player)
-        #     return player_pieces - opponent_pieces
+        else:
+            # Return 0 or some other default value if the game is not over
+            return 0
         
 class MiniMaxAlphaBeta(PlayerStrat):
-    def __init__(self, _board_state, player, max_depth=10):
+    def __init__(self, _board_state, player, max_depth=100):
         super().__init__(_board_state, player)
         self.max_depth = max_depth
 
     def start(self):
-        best_move, best_value = self.alphabeta(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
+        best_move, best_value = self.alphabeta(self.root_state ,-math.inf, math.inf, True)
         print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
         return best_move
 
-    def alphabeta(self, board, depth, alpha, beta, max_player):
-        if depth == 0 or logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
+    def alphabeta(self, board, alpha, beta, max_player):
+        if logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
             return None, self.evaluate(board) 
         # if self.evaluate(board) is not None else (-float('inf') if max_player else float('inf'))
 
@@ -141,7 +137,7 @@ class MiniMaxAlphaBeta(PlayerStrat):
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = self.player
-                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, False)
+                _, value = self.alphabeta(new_board, alpha, beta, False)
                 new_board[move[0], move[1]] = 0 
                 if value > best_value:
                     best_value = value
@@ -156,7 +152,7 @@ class MiniMaxAlphaBeta(PlayerStrat):
             for move in logic.get_possible_moves(board):
                 new_board = np.copy(board)
                 new_board[move[0], move[1]] = 3 - self.player
-                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, True)
+                _, value = self.alphabeta(new_board, alpha, beta, True)
                 new_board[move[0], move[1]] = 0  
                 if value < best_value:
                     best_value = value
@@ -236,6 +232,7 @@ class MyStrategyPlayer(PlayerStrat):
                         nx, ny = x + dx, y + dy
                         if 0 <= nx < len(board) and 0 <= ny < len(board[nx]) and board[nx][ny] == self.player:
                             score += 1
+                            print(score)
         return score
     
 
@@ -244,7 +241,64 @@ class MyStrategyPlayer(PlayerStrat):
                 return 1
             elif logic.is_game_over(3 - self.player, board):
                 return -1
-        
+            
+
+
+
+# Définition de la classe MctsPlayer héritant de PlayerStrat
+class MctsPlayer(PlayerStrat):
+    def __init__(self, _board_state, player, num_simulations=1000):
+        super().__init__(_board_state, player)
+        # Définition du nombre de simulations pour la recherche arborescente Monte Carlo
+        self.num_simulations = num_simulations
+        # Initialisation des dictionnaires pour stocker le nombre de mouvements et les scores
+        self.move_counts = {}
+        self.move_scores = {} 
+
+    # Méthode pour commencer la simulation MCTS et sélectionner le meilleur mouvement
+    def start(self):
+        for _ in range(self.num_simulations):
+            board_copy = np.copy(self.root_state)
+            self.run_simulation(board_copy)
+        best_move = self.select_best_move()
+        print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
+        return best_move
+
+    # Méthode pour exécuter une seule simulation Monte Carlo
+    def run_simulation(self, board):
+        # Liste pour stocker l'historique des mouvements effectués pendant la simulation
+        move_history = []
+        # Continuer la simulation jusqu'à la fin du jeu
+        while not logic.is_game_over(self.player, board) and not logic.is_game_over(3 - self.player, board):
+            possible_moves = logic.get_possible_moves(board)
+            move = random.choice(possible_moves)
+            # Mettre à jour le plateau avec le mouvement choisi
+            board[move[0], move[1]] = self.player if len(move_history) % 2 == 0 else 3 - self.player
+            move_history.append(move)
+        winner = self.player if logic.is_game_over(self.player, board) else 3 - self.player
+        # Mettre à jour les scores des mouvements en fonction du résultat de la simulation
+        self.update_move_scores(move_history, winner)
+
+    # Méthode pour mettre à jour les scores des mouvements en fonction des résultats des simulations
+    def update_move_scores(self, move_history, winner):
+        for move in move_history:
+            if move not in self.move_counts:
+                self.move_counts[move] = 0
+                self.move_scores[move] = 0  
+            # Vérifier si le mouvement a contribué à la victoire du gagnant
+            if (winner == self.player and move_history.index(move) % 2 == 0) or (winner != self.player and move_history.index(move) % 2 == 1):
+                self.move_counts[move] += 1
+                self.move_scores[move] += 1  
+
+    # Méthode pour sélectionner le meilleur mouvement en fonction des scores des mouvements
+    def select_best_move(self):
+        # Trouver le mouvement avec le score le plus élevé
+        best_move = max(self.move_scores, key=self.move_scores.get)
+        # Retourner le meilleur mouvement
+        return best_move
+
+#################### TESTS PERF ####################
+            
 
 str2strat: dict[str, PlayerStrat] = {
         "human": None,
@@ -252,5 +306,6 @@ str2strat: dict[str, PlayerStrat] = {
         "minimax": MiniMax,
         "my_new_ai_strat":MyStrategyPlayer,
         "minimax_ab": MiniMaxAlphaBeta,
+         "mcts": MctsPlayer,
 }
 

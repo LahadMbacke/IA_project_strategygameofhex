@@ -1,8 +1,12 @@
 import os
 import pickle
+import argparse
 import logging
 from rich import print
 from rich.logging import RichHandler
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Hide Pygame welcome message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
@@ -91,8 +95,40 @@ class Tournament:
         win_percentages = [score / total_games for score in scores]
 
        
-        # Affichage des statistiques sous forme de tableau avec Pandas
-        names = ['Joueur1', 'Joueur2']
+        # # Affichage des statistiques sous forme de tableau avec Pandas
+        # names = ['Joueur1', 'Joueur2']
+        # size = self.BOARD_SIZE 
+        # data = {
+        #     'Joueur1': [names[0]],
+        #     'Joueur2': [names[1]],
+        #     'size': [size],
+        #     '%win_Joueur1': [win_percentages[0]],
+        #     '%win_Joueur2': [win_percentages[1]]
+        # }
+        # tournament_results = pd.concat([tournament_results, pd.DataFrame(data)])
+
+        # tournament_results.to_csv('tournament_results.csv', sep=',', index=False)
+        
+
+        # # Read the CSV file into a DataFrame
+        # df = pd.read_csv("tournament_results.csv")
+
+        # # Create the pivot table including "size" as an additional dimension
+        # matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
+
+        # # Plot the heatmap
+        # sns.heatmap(matrix, annot=True, fmt=".2f")
+        # plt.show()
+
+         # Affichage des statistiques sous forme de tableau avec Pandas
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--player", help="Name of the first player")
+        parser.add_argument("--other", help="Name of the second player")
+        parser.add_argument("--size", type=int, help="Size of the board")
+        args = parser.parse_args()
+
+                # Use the command line arguments in your data dictionary
+        names = [args.player, args.other]
         size = self.BOARD_SIZE 
         data = {
             'Joueur1': [names[0]],
@@ -103,4 +139,28 @@ class Tournament:
         }
         tournament_results = pd.concat([tournament_results, pd.DataFrame(data)])
 
-        print(tournament_results.to_csv(sep=',', index=False))
+        tournament_results = tournament_results[["Joueur1", "Joueur2", "%win_Joueur1", "%win_Joueur2", "size"]]
+        tournament_results.to_csv('tournament_results.csv', sep=',', index=False)        
+
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv("tournament_results.csv")
+
+        # Create the pivot table including "size" as an additional dimension
+        # matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
+        print(df)
+       
+        matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
+
+        # Create a figure and a set of subplots
+        fig, ax = plt.subplots()
+
+        # Plot the heatmap with a title and labels
+        sns.heatmap(matrix, annot=True, fmt=".2f", ax=ax, cmap='coolwarm')
+
+        # Set the title and labels
+        ax.set_title('Pourcentage de victoires par joueur et taille de plateau')
+        ax.set_xlabel('Joueur2 et taille de plateau')
+        ax.set_ylabel('Joueur1')
+
+        # Show the plot
+        plt.show()

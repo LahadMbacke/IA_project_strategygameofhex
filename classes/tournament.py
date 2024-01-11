@@ -7,6 +7,8 @@ from rich.logging import RichHandler
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from classes.strategy import MiniMax, Random,McPlayer,MiniMaxAlphaBeta
+import pygame
 
 # Hide Pygame welcome message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
@@ -140,26 +142,23 @@ class Tournament:
         tournament_results = pd.concat([tournament_results, pd.DataFrame(data)])
 
         tournament_results = tournament_results[["Joueur1", "Joueur2", "%win_Joueur1", "%win_Joueur2", "size"]]
-        tournament_results.to_csv('tournament_results.csv', sep=',', index=False)        
-
+        tournament_results.to_csv('tournament_results.csv', sep=',', index=False, mode='a', header=False)
         # Read the CSV file into a DataFrame
         df = pd.read_csv("tournament_results.csv")
 
-        # Create the pivot table including "size" as an additional dimension
-        # matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
         print(df)
        
-        matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
+    
+        matrix = df.pivot_table(index="Joueur1", columns="Joueur2", values=["%win_Joueur1", "%win_Joueur2"])
 
-        # Create a figure and a set of subplots
+
+        # Reste du code pour l'affichage du heatmap
         fig, ax = plt.subplots()
-
-        # Plot the heatmap with a title and labels
         sns.heatmap(matrix, annot=True, fmt=".2f", ax=ax, cmap='coolwarm')
 
         # Set the title and labels
-        ax.set_title('Pourcentage de victoires par joueur et taille de plateau')
-        ax.set_xlabel('Joueur2 et taille de plateau')
+        ax.set_title('Pourcentage de victoires par joueur')
+        ax.set_xlabel('Joueur2')
         ax.set_ylabel('Joueur1')
 
         # Show the plot

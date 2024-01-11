@@ -173,80 +173,83 @@ class MiniMaxAlphaBeta(PlayerStrat):
 
     # def count_pieces(self, board):
     #     return sum(1 for x in range(len(board)) for y in range(len(board[x])) if board[x][y] == self.player)
-    
 class MyStrategyPlayer(PlayerStrat):
-    
     def __init__(self, _board_state, player, max_depth=4):
         super().__init__(_board_state, player)
         self.max_depth = max_depth
 
     def start(self):
-        best_move, best_value= self.alphabeta(self.root_state, self.max_depth, -float('inf'), float('inf'), True)
-        print(f"Je suis le Joueur {self.player}, mon placement {best_move}")
+        best_move, _ = self.alphabeta(self.root_state, self.max_depth, -math.inf, math.inf, True)
+        print(f"Player {self.player}: Best move at {best_move}")
         return best_move
 
     def alphabeta(self, board, depth, alpha, beta, max_player):
         if depth == 0 or depth < self.max_depth / 2:
             return None, self.utility(board)
-        elif logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
-            return None, self.evaluate(board) 
 
-        if max_player:
-            best_value = -math.inf
-            best_move = None
-            for move in logic.get_possible_moves(board):
-                new_board = np.copy(board)
-                new_board[move[0], move[1]] = self.player
-                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, False)
-                new_board[move[0], move[1]] = 0 
-                if value > best_value:
-                    best_value = value
-                    best_move = move
-                alpha = max(alpha, value)
-                if beta <= alpha:
-                    break
-            return best_move, best_value
-        else:
-            best_value = math.inf
-            best_move = None
-            for move in logic.get_possible_moves(board):
-                new_board = np.copy(board)
-                new_board[move[0], move[1]] = 3 - self.player
-                _, value = self.alphabeta(new_board, depth - 1, alpha, beta, True)
-                new_board[move[0], move[1]] = 0  
-                if value < best_value:
-                    best_value = value
-                    best_move = move
-                beta = min(beta, value)
-                if beta <= alpha:
-                    break
-            return best_move, best_value
-        
+        if logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
+            return None, self.evaluate(board)
+
+        best_value = -math.inf if max_player else math.inf
+        best_move = None
+
+        for move in logic.get_possible_moves(board):
+            new_board = np.copy(board)
+            new_board[move[0], move[1]] = self.player if max_player else 3 - self.player
+            _, value = self.alphabeta(new_board, depth - 1, alpha, beta, not max_player)
+            new_board[move[0], move[1]] = 0
+
+            if (max_player and value > best_value) or (not max_player and value < best_value):
+                best_value = value
+                best_move = move
+
+            alpha = max(alpha, value) if max_player else alpha
+            beta = min(beta, value) if not max_player else beta
+
+            if beta <= alpha:
+                break
+
+        return best_move, best_value
+
     def utility(self, board):
-        score = 0
-        directions = [(0, 1), (1, 0), (1, 1), (-1, -1), (0, -1), (-1, 0), (-1, 1), (1, -1)]  
+        centre = (len(board) - 1) // 2  # Position de la colonne centrale
+        score_centre = sum(board[i][centre] == self.player for i in range(len(board)))
+
+        score_adjacent_pieces = 0
+        directions = [(0, 1), (1, 0), (1, 1), (-1, -1), (0, -1), (-1, 0), (-1, 1), (1, -1)]
+
         for x in range(len(board)):
             for y in range(len(board[x])):
                 if board[x][y] == self.player:
                     for dx, dy in directions:
                         nx, ny = x + dx, y + dy
+                        # Vérifier si la nouvelle position est à l'intérieur du plateau
                         if 0 <= nx < len(board) and 0 <= ny < len(board[nx]) and board[nx][ny] == self.player:
-                            score += 1
-                            print(score)
-        return score
-    
+                            score_adjacent_pieces += 1
+
+        # Poids que vous pouvez ajuster en fonction de l'importance que vous accordez à chaque critère
+        weight_centre = 1
+        weight_adjacent_pieces = 2
+
+        # Combinaison linéaire des deux scores
+        combined_score = weight_centre * score_centre + weight_adjacent_pieces * score_adjacent_pieces
+
+        return combined_score
+
 
     def evaluate(self, board):
-            if logic.is_game_over(self.player, board):
-                return 1
-            elif logic.is_game_over(3 - self.player, board):
-                return -1
+        if logic.is_game_over(self.player, board):
+            return 1
+        elif logic.is_game_over(3 - self.player, board):
+            return -1
+        else:
+            return 0
+
+
             
 
-
-
-# Définition de la classe MctsPlayer héritant de PlayerStrat
-class MctsPlayer(PlayerStrat):
+# Définition de la classe McPlayer héritant de PlayerStrat
+class McPlayer(PlayerStrat):
     def __init__(self, _board_state, player, num_simulations=1000):
         super().__init__(_board_state, player)
         # Définition du nombre de simulations pour la recherche arborescente Monte Carlo
@@ -297,15 +300,12 @@ class MctsPlayer(PlayerStrat):
         # Retourner le meilleur mouvement
         return best_move
 
-#################### TESTS PERF ####################
             
-
 str2strat: dict[str, PlayerStrat] = {
         "human": None,
         "random": Random,
         "minimax": MiniMax,
         "my_new_ai_strat":MyStrategyPlayer,
         "minimax_ab": MiniMaxAlphaBeta,
-         "mcts": MctsPlayer,
+         "mc": McPlayer,
 }
-

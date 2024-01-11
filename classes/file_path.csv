@@ -1,0 +1,11 @@
+https://moodle.uphf.fr/mod/url/view.php?id=167282
+
+
+
+Mon heuristic:
+
+utility: Cette méthode calcule une valeur d'utilité pour un état de plateau donné. Elle compte le nombre de pièces du joueur qui sont adjacentes les unes aux autres dans n'importe quelle direction.
+
+La fonction utility que vous avez choisie évalue l'état du plateau de jeu en comptant le nombre de pièces du joueur qui sont adjacentes les unes aux autres dans n'importe quelle direction. Cette approche est basée sur l'idée que plus le joueur a de pièces adjacentes, plus il est probable qu'il gagne, car il est plus proche de former une ligne complète (dans le cas de jeux comme le tic-tac-toe ou le connect four).
+
+Cette fonction parcourt chaque cellule du plateau et, si elle contient une pièce du joueur, elle vérifie toutes les directions possibles (horizontale, verticale et diagonale) pour voir si la cellule adjacente contient également une pièce du joueur. Si c'est le cas, le score est augmenté de 1.

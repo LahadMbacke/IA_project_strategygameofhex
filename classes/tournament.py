@@ -97,32 +97,6 @@ class Tournament:
         win_percentages = [score / total_games for score in scores]
 
        
-        # # Affichage des statistiques sous forme de tableau avec Pandas
-        # names = ['Joueur1', 'Joueur2']
-        # size = self.BOARD_SIZE 
-        # data = {
-        #     'Joueur1': [names[0]],
-        #     'Joueur2': [names[1]],
-        #     'size': [size],
-        #     '%win_Joueur1': [win_percentages[0]],
-        #     '%win_Joueur2': [win_percentages[1]]
-        # }
-        # tournament_results = pd.concat([tournament_results, pd.DataFrame(data)])
-
-        # tournament_results.to_csv('tournament_results.csv', sep=',', index=False)
-        
-
-        # # Read the CSV file into a DataFrame
-        # df = pd.read_csv("tournament_results.csv")
-
-        # # Create the pivot table including "size" as an additional dimension
-        # matrix = df.pivot_table(index="Joueur1", columns=["Joueur2", "size"], values=["%win_Joueur1", "%win_Joueur2"])
-
-        # # Plot the heatmap
-        # sns.heatmap(matrix, annot=True, fmt=".2f")
-        # plt.show()
-
-         # Affichage des statistiques sous forme de tableau avec Pandas
         parser = argparse.ArgumentParser()
         parser.add_argument("--player", help="Name of the first player")
         parser.add_argument("--other", help="Name of the second player")
@@ -151,15 +125,11 @@ class Tournament:
     
         matrix = df.pivot_table(index="Joueur1", columns="Joueur2", values=["%win_Joueur1", "%win_Joueur2"])
 
-
-        # Reste du code pour l'affichage du heatmap
         fig, ax = plt.subplots()
         sns.heatmap(matrix, annot=True, fmt=".2f", ax=ax, cmap='coolwarm')
 
-        # Set the title and labels
         ax.set_title('Pourcentage de victoires par joueur')
         ax.set_xlabel('Joueur2')
         ax.set_ylabel('Joueur1')
 
-        # Show the plot
         plt.show()

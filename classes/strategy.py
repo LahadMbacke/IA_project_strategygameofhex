@@ -113,7 +113,6 @@ class MiniMax(PlayerStrat):
         elif logic.is_game_over(3 - self.player, board):
             return -1
         else:
-            # Return 0 or some other default value if the game is not over
             return 0
         
 class MiniMaxAlphaBeta(PlayerStrat):
@@ -129,7 +128,6 @@ class MiniMaxAlphaBeta(PlayerStrat):
     def alphabeta(self, board, alpha, beta, max_player):
         if logic.is_game_over(self.player, board) or logic.is_game_over(3 - self.player, board):
             return None, self.evaluate(board) 
-        # if self.evaluate(board) is not None else (-float('inf') if max_player else float('inf'))
 
         if max_player:
             best_value = -math.inf
@@ -168,11 +166,8 @@ class MiniMaxAlphaBeta(PlayerStrat):
             elif logic.is_game_over(3 - self.player, board):
                 return -1
             else:
-                # Return 0 or some other default value if the game is not over
                 return 0
 
-    # def count_pieces(self, board):
-    #     return sum(1 for x in range(len(board)) for y in range(len(board[x])) if board[x][y] == self.player)
 class MyStrategyPlayer(PlayerStrat):
     def __init__(self, _board_state, player, max_depth=4):
         super().__init__(_board_state, player)
@@ -223,15 +218,12 @@ class MyStrategyPlayer(PlayerStrat):
                 if board[x][y] == self.player:
                     for dx, dy in directions:
                         nx, ny = x + dx, y + dy
-                        # Vérifier si la nouvelle position est à l'intérieur du plateau
                         if 0 <= nx < len(board) and 0 <= ny < len(board[nx]) and board[nx][ny] == self.player:
                             score_adjacent_pieces += 1
 
-        # Poids que vous pouvez ajuster en fonction de l'importance que vous accordez à chaque critère
         weight_centre = 1
         weight_adjacent_pieces = 2
 
-        # Combinaison linéaire des deux scores
         combined_score = weight_centre * score_centre + weight_adjacent_pieces * score_adjacent_pieces
 
         return combined_score
@@ -252,13 +244,11 @@ class MyStrategyPlayer(PlayerStrat):
 class McPlayer(PlayerStrat):
     def __init__(self, _board_state, player, num_simulations=1000):
         super().__init__(_board_state, player)
-        # Définition du nombre de simulations pour la recherche arborescente Monte Carlo
         self.num_simulations = num_simulations
-        # Initialisation des dictionnaires pour stocker le nombre de mouvements et les scores
         self.move_counts = {}
         self.move_scores = {} 
 
-    # Méthode pour commencer la simulation MCTS et sélectionner le meilleur mouvement
+    # Méthode pour commencer la simulation MC et sélectionner le meilleur mouvement
     def start(self):
         for _ in range(self.num_simulations):
             board_copy = np.copy(self.root_state)
@@ -269,17 +259,13 @@ class McPlayer(PlayerStrat):
 
     # Méthode pour exécuter une seule simulation Monte Carlo
     def run_simulation(self, board):
-        # Liste pour stocker l'historique des mouvements effectués pendant la simulation
         move_history = []
-        # Continuer la simulation jusqu'à la fin du jeu
         while not logic.is_game_over(self.player, board) and not logic.is_game_over(3 - self.player, board):
             possible_moves = logic.get_possible_moves(board)
             move = random.choice(possible_moves)
-            # Mettre à jour le plateau avec le mouvement choisi
             board[move[0], move[1]] = self.player if len(move_history) % 2 == 0 else 3 - self.player
             move_history.append(move)
         winner = self.player if logic.is_game_over(self.player, board) else 3 - self.player
-        # Mettre à jour les scores des mouvements en fonction du résultat de la simulation
         self.update_move_scores(move_history, winner)
 
     # Méthode pour mettre à jour les scores des mouvements en fonction des résultats des simulations
@@ -288,16 +274,13 @@ class McPlayer(PlayerStrat):
             if move not in self.move_counts:
                 self.move_counts[move] = 0
                 self.move_scores[move] = 0  
-            # Vérifier si le mouvement a contribué à la victoire du gagnant
             if (winner == self.player and move_history.index(move) % 2 == 0) or (winner != self.player and move_history.index(move) % 2 == 1):
                 self.move_counts[move] += 1
                 self.move_scores[move] += 1  
 
     # Méthode pour sélectionner le meilleur mouvement en fonction des scores des mouvements
     def select_best_move(self):
-        # Trouver le mouvement avec le score le plus élevé
         best_move = max(self.move_scores, key=self.move_scores.get)
-        # Retourner le meilleur mouvement
         return best_move
 
             

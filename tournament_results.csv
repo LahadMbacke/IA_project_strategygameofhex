@@ -1,6 +1,10 @@
 Joueur1,Joueur2,%win_Joueur1,%win_Joueur2,size
 
 minimax_ab,mc,0.6,0.4,3
-my_new_ai_strat,mc,0.2,0.8,3
+minimax_ab,mc,0.6,0.4,3
+my_new_ai_strat,mc,0.6,0.4,3
+my_new_ai_strat,mc,0.4,0.6,3
+minimax,mc,0.2,0.8,3
 minimax,mc,0.0,1.0,3
+my_new_ai_strat,minimax_ab,0.6,0.4,3
 my_new_ai_strat,minimax_ab,0.6,0.4,3
